@@ -166,6 +166,14 @@ sub _build_table_info {
 
     my @rels = $source->relationships;
     foreach my $r (@rels) {
+        my $db = $c->stash->{cpac_db};
+        my $table = $c->stash->{cpac_table};
+        my %skip_relships = map { $_ => 1 } @{ $c->stash->{site_conf}->{$db}->{$table}->{skip_relships} || [] };
+        if (exists $skip_relships{$r}) {
+            $c->log->debug(sprintf 'autocrud: skipping relationship: [%s], db: [%s] table: [%s]',
+                $r, $db, $table) if $c->debug;
+            next;
+        }
         my $rel_info = $source->relationship_info($r);
 
         if ($rel_info->{attrs}->{accessor} eq 'multi') {
